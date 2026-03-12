@@ -6,6 +6,7 @@ import Liveness from "./pages/Liveness";
 import VotePage from "./pages/VotePage";
 import Confirmation from "./pages/Confirmation";
 import VerifyVote from "./pages/VerifyVote";
+import AdminAuth from "./pages/AdminAuth";
 
 const AppContext = createContext(null);
 
@@ -51,6 +52,7 @@ export default function App() {
           <Route path="/vote" element={<VotePage />} />
           <Route path="/confirmation" element={<Confirmation />} />
           <Route path="/verify" element={<VerifyVote />} />
+          <Route path="/admin" element={<AdminAuth />} />
         </Routes>
       </div>
     </AppContext.Provider>
