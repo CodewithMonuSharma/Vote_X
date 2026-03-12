@@ -97,14 +97,18 @@ npm run dev
 ## 📂 Project Structure
 
 ```text
-├── backend/            # Express API & MongoDB Models
+├── backend/            # Express API & OTP System
+│   ├── models/         # MongoDB Schemas (Voter, OTP, etc.)
+│   └── server.js       # Main API Entry Point
 ├── contracts/          # Solidity Smart Contracts
-├── frontend/           # React Application
+├── frontend/           # React + Vite Application
 │   ├── src/
-│   │   ├── pages/      # AdminAuth, Auth, Liveness, VotePage
-│   │   └── components/ # CoercionMonitor, LivenessCheck
-├── scripts/            # Deployment scripts
-└── hardhat.config.js   # Blockchain configuration
+│   │   ├── pages/      # Views (AdminAuth, Auth, VotePage, etc.)
+│   │   ├── components/ # Shared UI (LivenessCheck, CoercionMonitor)
+│   │   └── utils/      # API helpers and Web3 config
+├── scripts/            # Blockchain Deployment Scripts
+├── .env                # (Untracked) Environment Variables
+└── hardhat.config.js   # Hardhat Config
 ```
 
 ---
