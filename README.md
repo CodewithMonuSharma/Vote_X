@@ -124,13 +124,5 @@ npm run dev
 
 ---
 
-## 🛠️ Common Issues & Troubleshooting
-
-- **`Missing script: "dev"` in root folder:** You get this error because `npm run dev` is a Vite command and only works inside the `frontend/` directory. Be sure to run `cd frontend` first.
-- **Transactions failing:** Ensure the Hardhat node (`npx hardhat node`) is running in the background.
-- **Contract not found:** Ensure you have updated the address in `frontend/src/utils/contract.js` after deploying.
-
----
-
 ## 📄 License
 This project is licensed under the MIT License.
