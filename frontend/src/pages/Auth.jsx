@@ -1,47 +1,49 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../App";
-import { generateCommitment, truncateHash } from "../utils/zkp";
+
+const API_BASE = "http://localhost:5000";
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { setCommitmentHash } = useAppContext();
+  const { setWalletAddress } = useAppContext(); // Simplified for now
 
   const [voterId, setVoterId] = useState("");
-  const [secret, setSecret] = useState("");
-  const [hash, setHash] = useState("");
-  const [generating, setGenerating] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [step, setStep] = useState(1); // 1 = input, 2 = show hash
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  async function handleGenerate(e) {
+  async function handleLogin(e) {
     e.preventDefault();
-    if (!voterId.trim() || !secret.trim()) return;
+    if (!voterId.trim() || !password.trim()) return;
 
-    setGenerating(true);
+    setLoading(true);
+    setError("");
     try {
-      const commitment = await generateCommitment(voterId.trim(), secret.trim());
-      setHash(commitment);
-      setCommitmentHash(commitment);
-      setStep(2);
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voter_id: voterId, password }),
+      });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || "Login failed");
+
+      // Store JWT token
+      localStorage.setItem("voter_token", data.token);
+      localStorage.setItem("voter_name", data.voter.name);
+      
+      // Proceed to voting flow
+      navigate("/liveness");
     } catch (err) {
-      console.error("Commitment generation failed:", err);
-    }
-    setGenerating(false);
-  }
-
-  async function copyHash() {
-    try {
-      await navigator.clipboard.writeText(hash);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-cyber-dark">
       {/* Header */}
       <header className="border-b border-neon-cyan/10 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -51,135 +53,110 @@ export default function Auth() {
           >
             SHIELD-VOTE
           </button>
-          <span className="text-gray-500 font-mono text-sm">Identity Verification</span>
+          <span className="text-gray-500 font-mono text-sm">Citizen Portal</span>
         </div>
       </header>
 
       <main className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-lg">
-          {step === 1 ? (
-            <>
-              <div className="text-center mb-8">
-                <h2 className="font-orbitron text-2xl text-white mb-2">
-                  Voter Authentication
-                </h2>
-                <p className="text-gray-400 font-mono text-sm">
-                  Generate your anonymous commitment hash
-                </p>
-              </div>
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h2 className="font-orbitron text-3xl text-white mb-2 tracking-widest">
+              IDENTITY LOGIN
+            </h2>
+            <p className="text-gray-400 font-mono text-sm">
+              Use your verified Voter ID and generated password
+            </p>
+          </div>
 
-              {/* Visual diagram */}
-              <div className="flex items-center justify-center gap-3 mb-8">
-                <div className="bg-surface border border-neon-cyan/20 rounded-lg px-3 py-2 text-xs font-mono text-gray-400">
-                  Voter ID + Secret
-                </div>
-                <svg className="w-6 h-6 text-neon-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-                <div className="bg-surface border border-neon-cyan/20 rounded-lg px-3 py-2 text-xs font-mono text-neon-cyan">
-                  SHA-256
-                </div>
-                <svg className="w-6 h-6 text-neon-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-                <div className="bg-surface border border-neon-cyan/20 rounded-lg px-3 py-2 text-xs font-mono text-neon-cyan">
-                  Commitment
-                </div>
-              </div>
+          <div className="bg-surface border border-neon-cyan/20 rounded-2xl p-8 shadow-neon relative overflow-hidden">
+            {/* Scanline effect */}
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-neon-cyan/20 animate-scanline pointer-events-none" />
 
-              <form onSubmit={handleGenerate} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-mono text-gray-400 mb-2">
-                    Voter ID
-                  </label>
+            {error && (
+              <div className="bg-red-900/20 border border-red-500/30 text-red-500 font-mono text-xs p-4 rounded-lg mb-6 text-center">
+                ACCESS DENIED: {error}
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div>
+                <label className="block text-xs font-mono text-neon-cyan mb-2 uppercase tracking-tighter">
+                  Voter Identification (VID)
+                </label>
+                <div className="relative">
                   <input
                     type="text"
                     value={voterId}
                     onChange={(e) => setVoterId(e.target.value)}
-                    placeholder="Enter your voter ID"
-                    className="w-full bg-surface border border-neon-cyan/20 focus:border-neon-cyan text-white font-mono px-4 py-3 rounded-lg outline-none transition"
+                    placeholder="VID-XXXXXXXX"
+                    className="w-full bg-cyber-dark border border-neon-cyan/20 focus:border-neon-cyan text-white font-mono px-4 py-3 rounded-lg outline-none transition-all placeholder:text-gray-700"
                     required
                   />
+                  <div className="absolute right-3 top-3.5 text-neon-cyan/20 pointer-events-none">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-mono text-gray-400 mb-2">
-                    Secret Passphrase
-                  </label>
+              <div>
+                <label className="block text-xs font-mono text-neon-cyan mb-2 uppercase tracking-tighter">
+                  Secure Access Key
+                </label>
+                <div className="relative">
                   <input
                     type="password"
-                    value={secret}
-                    onChange={(e) => setSecret(e.target.value)}
-                    placeholder="Enter your secret passphrase"
-                    className="w-full bg-surface border border-neon-cyan/20 focus:border-neon-cyan text-white font-mono px-4 py-3 rounded-lg outline-none transition"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="w-full bg-cyber-dark border border-neon-cyan/20 focus:border-neon-cyan text-white font-mono px-4 py-3 rounded-lg outline-none transition-all placeholder:text-gray-700"
                     required
                   />
+                  <div className="absolute right-3 top-3.5 text-neon-cyan/20 pointer-events-none">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={generating || !voterId.trim() || !secret.trim()}
-                  className="w-full bg-neon-cyan text-cyber-dark font-orbitron font-bold py-3 rounded-lg glow-button hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {generating ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-cyber-dark border-t-transparent rounded-full animate-spin" />
-                      Generating...
-                    </span>
-                  ) : (
-                    "Generate Commitment Hash"
-                  )}
-                </button>
-              </form>
-            </>
-          ) : (
-            <>
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 border-2 border-green-400 rounded-full mb-4">
-                  <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h2 className="font-orbitron text-2xl text-white mb-2">
-                  Identity Committed
-                </h2>
-                <p className="text-gray-400 font-mono text-sm">
-                  Your anonymous commitment hash has been generated
-                </p>
-              </div>
-
-              {/* Hash display */}
-              <div className="bg-surface border border-neon-cyan/30 rounded-xl p-6 mb-6">
-                <p className="text-xs font-mono text-gray-500 mb-2">Commitment Hash</p>
-                <div className="flex items-center gap-2">
-                  <code className="text-neon-cyan font-mono text-sm break-all flex-1">
-                    {truncateHash(hash, 18, 12)}
-                  </code>
-                  <button
-                    onClick={copyHash}
-                    className="shrink-0 px-3 py-1 bg-deep-purple border border-neon-cyan/20 rounded text-xs font-mono text-neon-cyan hover:bg-neon-cyan/10 transition"
-                  >
-                    {copied ? "Copied!" : "Copy"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Disclaimer */}
-              <div className="bg-deep-purple border border-yellow-500/20 rounded-lg p-4 mb-8">
-                <p className="text-yellow-400/80 font-mono text-xs leading-relaxed">
-                  Your identity is never sent to the blockchain. Only this
-                  commitment hash is used to record your vote anonymously.
-                </p>
               </div>
 
               <button
-                onClick={() => navigate("/liveness")}
-                className="w-full bg-neon-cyan text-cyber-dark font-orbitron font-bold py-3 rounded-lg glow-button hover:scale-[1.02] transition-transform"
+                type="submit"
+                disabled={loading || !voterId.trim() || !password.trim()}
+                className="w-full bg-neon-cyan text-cyber-dark font-orbitron font-bold py-4 rounded-xl glow-button hover:translate-y-[-2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
               >
-                Proceed to Liveness Check
+                {loading ? (
+                  <span className="flex items-center justify-center gap-3">
+                    <div className="w-5 h-5 border-2 border-cyber-dark border-t-transparent rounded-full animate-spin" />
+                    AUTHENTICATING...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    INITIATE LOGIN
+                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </span>
+                )}
               </button>
-            </>
-          )}
+            </form>
+
+            <div className="mt-8 text-center">
+              <p className="text-gray-600 font-mono text-xs">
+                Need verification? Contact your nearest 
+                <button onClick={() => navigate("/admin")} className="text-neon-cyan/60 hover:text-neon-cyan ml-1 underline decoration-dotted">
+                  Voting Officer
+                </button>
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 flex justify-center gap-8 opacity-20 filter grayscale">
+            <div className="font-orbitron text-[10px] text-gray-400">ENCRYPTION: AES-256-GCM</div>
+            <div className="font-orbitron text-[10px] text-gray-400">AUTH: JWT (ES256)</div>
+            <div className="font-orbitron text-[10px] text-gray-400">NETWORK: SHIELD-P2P</div>
+          </div>
         </div>
       </main>
     </div>

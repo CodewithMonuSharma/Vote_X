@@ -1,8 +1,13 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
+<<<<<<< HEAD
     "C:\\Users\\dell premium series\\Desktop\\Vote_X\\contracts\\ShieldVote.sol": {
       "lastModificationDate": 1773318639842,
+=======
+    "D:\\Delhi hackathon\\Vote_X\\contracts\\ShieldVote.sol": {
+      "lastModificationDate": 1773321666171,
+>>>>>>> 2a22b1e (feat: implement secure OTP-based voter auth, add admin verification portal, and update documentation)
       "contentHash": "d393e6664ba32cf1f494294ea3c73171",
       "sourceName": "contracts/ShieldVote.sol",
       "solcConfig": {

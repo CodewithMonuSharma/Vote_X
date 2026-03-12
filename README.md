@@ -1,69 +1,136 @@
-# Vote_X (Shield-Vote)
+# Shield-Vote: Secure Blockchain-Based E-Voting with Edge AI
 
-A Secure Blockchain-Based E-Voting System with Edge AI.
+Shield-Vote is a futuristic, secure, and decentralized e-voting platform designed to combat physical coercion and voter impersonation. It integrates **Ethereum Smart Contracts** for transparent vote recording and **Edge AI (Computer Vision)** for real-time security monitoring.
 
-## Architecture
-- **Backend/Blockchain:** Hardhat, Solidity (Ethereum Smart Contracts)
-- **Frontend:** Vite, React, ethers.js, TailwindCSS
+## 🌟 Key Features
 
-## Prerequisites
-- Node.js
+### 1. 🛡️ Coercion-Resistant Voting
+The system uses background AI monitoring to detect if a voter is under physical pressure.
+- **Multi-Person Detection**: Alerts the user if more than one person is detected near the camera.
+- **Suspicion Scoring**: Monitors rapid blinking, gaze redirection, and shoulder tension to detect "voting under stress."
+- **Protective Overrides**: In high-risk scenarios, the system can cast a "dummy" vote that overwrites previous records, allowing the user to mask their intent until they are in a safe environment.
 
-## Quick Start Guide
+### 2. 👁️ AI Liveness Verification
+Before accessing the ballot, users must pass a liveness check to ensure they are a real person and not a photo/video bypass.
+- Uses **Google MediaPipe** for high-fidelity facial landmark tracking.
+- Interactive challenges: Blink, Smile, and Head Turns.
 
-This project consists of a blockchain backend (in the root directory) and a React frontend (in the `frontend` directory). You'll need to run both to use the full application.
+### 3. 🔐 Two-Factor Voter Authentication
+A secure hybrid system to bridge real-world identity with digital voting.
+- **Officer Verification**: A Voting Officer verifies physical ID and triggers an **OTP** to the voter's phone.
+- **Auto-Password Generation**: Upon successful OTP entry, the system generates a secure, hashed password for the voter.
+- **JWT Protection**: Secured sessions ensure that only verified citizens can access the voting terminal.
 
-### 1. Install Dependencies
+### 4. ⛓️ Blockchain Transparency
+All votes are recorded on an Ethereum-compatible blockchain.
+- **Immutable Audit Log**: Every vote is timestamped and hashed.
+- **Vote Overwriting**: Supports the "last vote counts" principle to mitigate coercion.
 
-Open a terminal and run these commands to install all required packages:
+---
 
-```bash
-# 1. Install blockchain dependencies in the root directory
-npm install
+## 🛠️ Tech Stack
 
-# 2. Install frontend dependencies in the frontend directory
-cd frontend
-npm install
-cd ..
-```
+- **Blockchain**: Solidity, Hardhat, Ethers.js
+- **Frontend**: React.js, Vite, Tailwind CSS, Framer Motion
+- **AI/ML**: Google MediaPipe (Face Landmarker, Pose Landmarker)
+- **Backend**: Node.js, Express, MongoDB (Voter DB & OTP TTL)
+- **Security**: Bcrypt (Hashing), JWT (Authentication)
 
-### 2. Running Local Blockchain (Backend)
+---
 
-Open a **new terminal window** in the root directory (`Vote_X`). This will run your local Ethereum network:
+## 🚀 Getting Started
 
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v16+)
+- [MongoDB](https://www.mongodb.com/try/download/community) (Running locally or Atlas)
+- [MetaMask](https://metamask.io/) browser extension
+
+### Installation
+
+1. **Clone and Install Root Deps**
+   ```bash
+   git clone https://github.com/CodewithMonuSharma/Vote_X.git
+   cd Vote_X
+   npm install
+   ```
+
+2. **Frontend & Backend Setup**
+   ```bash
+   # Install Frontend
+   cd frontend && npm install
+   
+   # Install Backend
+   cd ../backend && npm install
+   ```
+
+### Running Locally
+
+#### Step 1: Start the Local Blockchain
+In the root directory:
 ```bash
 npx hardhat node
 ```
-*Leave this terminal window open. It will print out test accounts and transaction logs.*
 
-### 3. Deploy Smart Contracts
-
-Open another **new terminal window** in the root directory (`Vote_X`). Run this command to deploy your contracts to the local node you just started:
-
+#### Step 2: Deploy Smart Contract
+In a new terminal (root):
 ```bash
-npx hardhat run scripts/deploy.js --network localhost
+npm run deploy
+```
+*Update `frontend/src/utils/contract.js` with the `DEPLOYED_ADDRESS`.*
+
+#### Step 3: Start the Backend Server
+In a new terminal:
+```bash
+cd backend
+node server.js
 ```
 
-> **IMPORTANT:** Look at the output of this command. It will print a contract address (e.g., `0x5FbDB...`). Copy this line and update the `DEPLOYED_ADDRESS` variable in `frontend/src/utils/contract.js`.
-
-### 4. Start the Frontend Application
-
-In the same terminal where you deployed the contracts (or a new one), navigate to the frontend directory and start the Vite development server:
-
+#### Step 4: Run the Web App
+In a new terminal:
 ```bash
 cd frontend
 npm run dev
 ```
 
-### 5. Access the App
+---
 
-Open your web browser and go to the link provided by Vite, usually:
-[http://localhost:5173](http://localhost:5173)
+## 📂 Project Structure
+
+```text
+├── backend/            # Express API & MongoDB Models
+├── contracts/          # Solidity Smart Contracts
+├── frontend/           # React Application
+│   ├── src/
+│   │   ├── pages/      # AdminAuth, Auth, Liveness, VotePage
+│   │   └── components/ # CoercionMonitor, LivenessCheck
+├── scripts/            # Deployment scripts
+└── hardhat.config.js   # Blockchain configuration
+```
 
 ---
 
-## Common Issues & Troubleshooting
+## 👨‍💼 Role-Based Workflow
+
+### 📋 Voting Officer (Admin)
+- Accesses `/admin` to register a new voter.
+- Sends **OTP** to the voter's mobile.
+- Verifies the OTP and provides the voter with their **Voter ID** and **Generated Password**.
+
+### 🗳️ Citizen (Voter)
+- Logs in at `/auth` using credentials provided by the officer.
+- Completes **AI Liveness Verification**.
+- Selects candidate and confirms vote on the **Blockchain**.
+- Receives a cryptographic receipt for verification.
+
+---
+
+## 🛠️ Common Issues & Troubleshooting
 
 - **`Missing script: "dev"` in root folder:** You get this error because `npm run dev` is a Vite command and only works inside the `frontend/` directory. Be sure to run `cd frontend` first.
 - **Transactions failing:** Ensure the Hardhat node (`npx hardhat node`) is running in the background.
 - **Contract not found:** Ensure you have updated the address in `frontend/src/utils/contract.js` after deploying.
+
+---
+
+## 📄 License
+This project is licensed under the MIT License.
