@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 
 // Update this after running: npx hardhat run scripts/deploy.js --network localhost
-const DEPLOYED_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const DEPLOYED_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 const CONTRACT_ABI = [
   "function owner() view returns (address)",
@@ -24,8 +24,9 @@ export function getProvider() {
   if (typeof window !== "undefined" && window.ethereum) {
     return new ethers.BrowserProvider(window.ethereum);
   }
-  // Demo fallback: connect to local Hardhat node
-  return new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+  // Demo fallback: connect to public RPC (Vercel) or local Hardhat node
+  const rpcUrl = import.meta.env.VITE_RPC_URL || "http://127.0.0.1:8545";
+  return new ethers.JsonRpcProvider(rpcUrl);
 }
 
 export function getContract(signerOrProvider) {
@@ -40,11 +41,16 @@ export async function connectWallet() {
     const address = await signer.getAddress();
     return { provider, signer, address };
   }
-  // Demo fallback: use first Hardhat test account
-  const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
-  const signer = await provider.getSigner(0);
-  const address = await signer.getAddress();
-  return { provider, signer, address };
+  // Demo fallback: use first Hardhat test account (Note: Won't work on Vercel without MetaMask)
+  const rpcUrl = import.meta.env.VITE_RPC_URL || "http://127.0.0.1:8545";
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
+  try {
+    const signer = await provider.getSigner(0);
+    const address = await signer.getAddress();
+    return { provider, signer, address };
+  } catch (err) {
+    throw new Error("No Ethereum wallet found. Please install MetaMask.");
+  }
 }
 
 export async function castVoteOnChain(commitmentHash, candidateId) {
